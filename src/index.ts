@@ -3,7 +3,13 @@ import { ApolloServer } from 'apollo-server-express';
 import { typeDefs } from '@/graphql/typeDefs';
 import { resolvers } from '@/graphql/resolvers';
 import ConnectDB from '@/services/MongoDB_Service';
+<<<<<<< Updated upstream
 import dotenv from 'dotenv';
+=======
+import { createRandomComments, createRandomFollow, createRandomLikes, createRandomMessages, createRandomNotifications, createRandomPosts, createRandomUsers } from '@/db/seeds/index_Seed';
+const app = express();
+const port = process.env.PORT || 3000;
+>>>>>>> Stashed changes
 
 // Load environment variables
 dotenv.config();
@@ -45,3 +51,13 @@ const startServer = async () => {
 }
 
 startServer();
+<<<<<<< Updated upstream
+=======
+// createRandomUsers(10);
+// createRandomPosts(10);
+// createRandomComments(10);
+// createRandomLikes(15);
+// createRandomFollow(20);
+// createRandomMessages(20);
+createRandomNotifications(15);
+>>>>>>> Stashed changes
