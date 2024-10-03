@@ -25,7 +25,7 @@ jobs:
       # Step 3: Deploy to EC2
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_INSTANCE_IP }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_INSTANCE_IP }} << 'EOF'
             # Step 3.1: Navigate to the app directory on the EC2 instance
             cd /path/to/your/app  # Change this to your actual application path
 
@@ -38,7 +38,7 @@ jobs:
               sudo chmod +x /usr/local/bin/docker-compose
             fi
 
-            # Step 3.4: Build the Docker images
+            # Step 3.4: Build Docker images
             docker-compose build
 
             # Step 3.5: Stop and remove old containers if running
