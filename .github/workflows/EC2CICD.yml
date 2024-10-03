@@ -1,39 +1,47 @@
-name: CI/CD to EC2
+name: Deploy Docker to EC2
 
 on:
   push:
     branches:
-      - main
+      - main  # Change this to your default branch if necessary
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      # Checkout the code from the repository
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v2
 
-      # Build the Docker image locally
-      - name: Build Docker image
+      - name: Set up SSH
         run: |
-          docker build -t social-media-app .
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_KEY_PATH }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo "${{ secrets.EC2_INSTANCE_IP }}" >> ~/.ssh/known_hosts
 
-      # Save the Docker image to a file
-      - name: Save Docker image
+      - name: Build Docker Images
         run: |
-          docker save social-media-app > social-media-app.tar
+          docker-compose build
 
-      # Prepare the EC2 instance
-      - name: Prepare EC2 Instance
-        env:
-          EC2_INSTANCE_IP: ${{ secrets.EC2_INSTANCE_IP }}
+      - name: Deploy to EC2
         run: |
-          echo "Preparing EC2 instance at $EC2_INSTANCE_IP"
-          ssh -i social-media-node.pem -o StrictHostKeyChecking=no ec2-user@$EC2_INSTANCE_IP 'sudo yum update -y && sudo yum install -y docker && sudo service docker start'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_INSTANCE_IP }} << 'EOF'
+            # Navigate to your app directory
+            cd /path/to/your/app  # Change this to your application's path
 
-      # Transfer Docker image file to EC2 instance
-      - name: Transfer Docker Image to EC2
-        env:
-          EC2_INSTANCE_IP: ${{ secrets.EC2_INSTANCE_IP }}
-        run: |
-          echo "Transferring Docker image to EC2 instance at $EC2_INSTA
+            # Pull the latest changes
+            git pull origin main
+
+            # Install Docker Compose if not installed
+            if ! command -v docker-compose &> /dev/null; then
+              sudo apt update
+              sudo apt install -y docker-compose
+            fi
+
+            # Remove old containers if they exist
+            docker-compose down || true
+
+            # Run the new containers
+            docker-compose up -d
+          EOF
