@@ -1,15 +1,16 @@
 import express, { Application } from 'express';
 import { ApolloServer } from 'apollo-server-express';
-import { typeDefs } from '@/graphql/typeDefs';
-import { resolvers } from '@/graphql/resolvers';
+// import { typeDefs } from '@/graphql/typeDefs';
+// import { resolvers } from '@/graphql/resolvers';
 import ConnectDB from '@/services/MongoDB_Service';
 import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-const app: Application = express();
-const port = process.env.PORT || 3000; // Use environment variable or fallback to 3000
+import { createRandomUsers } from '@/db/seeds/index_Seed';
+const app = express();
+const port = process.env.PORT || 3000;
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -21,17 +22,17 @@ const startServer = async () => {
     await db.connect();
 
     // Create an instance of ApolloServer
-    const apolloServer = new ApolloServer({
-      typeDefs,
-      resolvers,
-      context: ({ req }) => {
-        return { req }; // You can add more context if needed
-      },
-    });
+    // const apolloServer = new ApolloServer({
+    //   typeDefs,
+    //   resolvers,
+    //   context: ({ req }) => {
+    //     return { req }; // You can add more context if needed
+    //   },
+    // });
 
     // Start the Apollo Server
-    await apolloServer.start();
-    apolloServer.applyMiddleware({ app, path: '/graphql' });
+    // await apolloServer.start();
+    // apolloServer.applyMiddleware({ app, path: '/graphql' });
 
     // Start the Express server
     app.listen(port, () => {
@@ -44,4 +45,6 @@ const startServer = async () => {
   }
 }
 
-startServer();
+
+startServer()
+createRandomUsers(10);
