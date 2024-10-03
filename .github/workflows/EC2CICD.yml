@@ -10,28 +10,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up SSH
+      - name: Set up SSH key
         run: |
-          mkdir -p ~/.ssh
-          printf "%s" "${{ secrets.EC2_KEY_PATH }}" > ~/.ssh/id_rsa  # Save private key to id_rsa
-          chmod 600 ~/.ssh/id_rsa  # Secure permissions for the SSH key
-          ssh-keyscan -H ${{ secrets.EC2_INSTANCE_IP }} >> ~/.ssh/known_hosts  # Add EC2 instance to known_hosts
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -t rsa ${{ secrets.EC2_INSTANCE_IP }} >> ~/.ssh/known_hosts  # Ensure the instance is trusted
+
+      - name: Install Git if not present
+        run: sudo apt-get install git -y
 
       - name: Deploy to EC2
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_INSTANCE_IP }} << 'EOF'
+          # Define variables
+          SSH_KEY_PATH=~/.ssh/id_rsa
+          EC2_USER=ec2-user
+          EC2_INSTANCE=${{ secrets.EC2_INSTANCE_IP }}
+          APP_DIR="/path/to/your/app"  # Change this to your actual application path
+          REPO_URL="git@github.com:username/repository.git"  # Replace with your actual repo URL
+
+          ssh -i $SSH_KEY_PATH -o StrictHostKeyChecking=no $EC2_USER@$EC2_INSTANCE << 'EOF'
             # Install Git if not already installed
             if ! command -v git &> /dev/null; then
               sudo dnf install -y git  # Use dnf for Amazon Linux 2023
             fi
 
-            # Navigate to app directory (make sure to replace this with the correct path)
-            cd /path/to/your/app
+            # Check if app directory exists; if not, clone the repository
+            if [ ! -d "$APP_DIR" ]; then
+              git clone $REPO_URL $APP_DIR
+            fi
+
+            # Navigate to the app directory
+            cd $APP_DIR
             
-            # Pull latest changes from the repository
+            # Pull the latest changes from the main branch
             git pull origin main
             
             # Install Docker Compose if not already installed
