@@ -10,37 +10,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v2
 
+      # Step 2: Set up SSH access to EC2
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_KEY_PATH }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.EC2_INSTANCE_IP }} >> ~/.ssh/known_hosts
+          echo "${{ secrets.EC2_KEY_PATH }}" > ~/.ssh/id_rsa  # Add the private key from GitHub Secrets
+          chmod 600 ~/.ssh/id_rsa  # Set the permissions on the private key file
+          ssh-keyscan -H ${{ secrets.EC2_INSTANCE_IP }} >> ~/.ssh/known_hosts  # Add EC2 instance to known hosts
 
+      # Step 3: Deploy to EC2
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_INSTANCE_IP }} << 'EOF'
-            # Navigate to your app directory
-            cd /path/to/your/app  # Change this to your application's path
+            # Step 3.1: Navigate to the app directory on the EC2 instance
+            cd /path/to/your/app  # Change this to your actual application path
 
-            # Pull the latest changes from GitHub
+            # Step 3.2: Pull the latest changes from the main branch
             git pull origin main
 
-            # Install Docker Compose if not installed
+            # Step 3.3: Install Docker Compose if not already installed
             if ! command -v docker-compose &> /dev/null; then
               sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
             fi
 
-            # Build Docker images
+            # Step 3.4: Build the Docker images
             docker-compose build
 
-            # Stop any running containers
+            # Step 3.5: Stop and remove old containers if running
             docker-compose down
 
-            # Run the new containers in detached mode
+            # Step 3.6: Start the new containers in detached mode
             docker-compose up -d
           EOF
