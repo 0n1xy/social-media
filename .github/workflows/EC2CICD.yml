@@ -3,7 +3,7 @@ name: Deploy Docker to EC2
 on:
   push:
     branches:
-      - main  # Change this to your default branch if necessary
+      - main  # Trigger on push to the main branch
 
 jobs:
   deploy:
@@ -18,11 +18,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_KEY_PATH }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          echo "${{ secrets.EC2_INSTANCE_IP }}" >> ~/.ssh/known_hosts
-
-      - name: Build Docker Images
-        run: |
-          docker-compose build
+          ssh-keyscan -H ${{ secrets.EC2_INSTANCE_IP }} >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
         run: |
@@ -30,18 +26,21 @@ jobs:
             # Navigate to your app directory
             cd /path/to/your/app  # Change this to your application's path
 
-            # Pull the latest changes
+            # Pull the latest changes from GitHub
             git pull origin main
 
             # Install Docker Compose if not installed
             if ! command -v docker-compose &> /dev/null; then
-              sudo apt update
-              sudo apt install -y docker-compose
+              sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
             fi
 
-            # Remove old containers if they exist
-            docker-compose down || true
+            # Build Docker images
+            docker-compose build
 
-            # Run the new containers
+            # Stop any running containers
+            docker-compose down
+
+            # Run the new containers in detached mode
             docker-compose up -d
           EOF
