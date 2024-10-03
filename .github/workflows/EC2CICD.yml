@@ -30,7 +30,7 @@ jobs:
       # Decode the EC2 private key from base64 and set permissions
       - name: Decode EC2 Key
         run: |
-          echo "${{ secrets.EC2_KEY }}" | base64 -d > social-media-node.pem
+          echo "${{ secrets.EC2_KEY_PATH }}" | base64 -d > social-media-node.pem
           chmod 600 social-media-node.pem
 
       # Prepare the EC2 instance
