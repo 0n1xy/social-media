@@ -44,13 +44,3 @@ const startServer = async () => {
 }
 
 startServer();
-<<<<<<< Updated upstream
-=======
-// createRandomUsers(10);
-// createRandomPosts(10);
-// createRandomComments(10);
-// createRandomLikes(15);
-// createRandomFollow(20);
-// createRandomMessages(20);
-createRandomNotifications(15);
->>>>>>> Stashed changes
