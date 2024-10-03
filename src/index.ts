@@ -3,14 +3,14 @@ import { ApolloServer } from 'apollo-server-express';
 // import { typeDefs } from '@/graphql/typeDefs';
 // import { resolvers } from '@/graphql/resolvers';
 import ConnectDB from '@/services/MongoDB_Service';
-import { createRandomComments, createRandomFollow, createRandomLikes, createRandomMessages, createRandomNotifications, createRandomPosts, createRandomUsers } from '@/db/seeds/index_Seed';
-const app = express();
-const port = process.env.PORT || 3000;
+import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-
+import { createRandomUsers } from '@/db/seeds/index_Seed';
+const app = express();
+const port = process.env.PORT || 3000;
 // Middleware to parse JSON
 app.use(express.json());
 
@@ -45,4 +45,4 @@ const startServer = async () => {
 }
 
 startServer()
-// createRandomUsers(10);
+createRandomUsers(10);
