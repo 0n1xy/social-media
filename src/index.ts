@@ -4,14 +4,12 @@ import { ApolloServer } from 'apollo-server-express';
 // import { resolvers } from '@/graphql/resolvers';
 import ConnectDB from '@/services/MongoDB_Service';
 import dotenv from 'dotenv';
-
 // Load environment variables
 dotenv.config();
 
 import { createRandomUsers } from '@/db/seeds/index_Seed';
 const app = express();
 const port = process.env.PORT || 3000;
-
 // Middleware to parse JSON
 app.use(express.json());
 
@@ -45,6 +43,4 @@ const startServer = async () => {
   }
 }
 
-
-startServer()
-createRandomUsers(10);
+startServer();

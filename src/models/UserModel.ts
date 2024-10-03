@@ -1,19 +1,37 @@
-const mongoose = require('mongoose');
+import { IUser } from "../types/User_Interface";
+import { Schema, model } from "mongoose";
 
-const Schema = mongoose.Schema;
-const UserSchema = new Schema({
-    username : {type : String},
-    password : {type : String},
-    sex : {type : String},
-    firstName: {type : String},
-    lastName: {type : String},
-    dayOfBirth : {type : Date},
-    email : {type : String},
-    profile_picture : {type : String},
-    biography : {type : String}
-},
-{
-    timestamps : true
+
+export const userSchemaFields = {
+    _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+    },
+    username: {
+        type: String,
+        required: true,
+    },
+    password: {
+        type: String,
+        required: true,
+    },
+    sex: { type : String},
+    first_name: { type: String, required: true},
+    last_name: { type: String, required: true},
+    phone_number: { type: String, required: true },
+    email: { type: String, required: true },
+    birthday: { type: Date, required: true },
+    profile_picture: { type: String },
+    biography: { type: String },
+    created_date: { type: Date, default: Date.now(), required: true },
+    updated_date: { type: Date, default: Date.now(), required: true },
+};
+const userSchema = new Schema<IUser>(userSchemaFields);
+userSchema.pre('save', function(next) {
+    this.updated_date = new Date();
+    next();
 });
 
-module.exports = mongoose.model('user', UserSchema);
+const User = model<IUser>("User", userSchema);
+
+export default User;
