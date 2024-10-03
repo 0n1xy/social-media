@@ -31,7 +31,7 @@ jobs:
 
             # Define application directory and repository URL
             APP_DIR="/home/ec2-user/my-app"  # Change this to your actual application path
-            REPO_URL="git@github.com:0n1xy/social-media.git"  # Replace with your actual repo URL
+            REPO_URL="https://github.com/0n1xy/social-media.git"  # Public repo URL
 
             # Check if app directory exists; if not, clone the repository
             if [ ! -d "$APP_DIR" ]; then
