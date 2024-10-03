@@ -9,49 +9,56 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # Checkout the code from the repository
+      # Step 1: Checkout the code from the repository
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Set up Node.js environment
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
+      # Step 2: Build the Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t your-image-name .
 
-      # Install project dependencies
-      - name: Install dependencies
-        run: npm install
+      # Step 3: Login to Docker Hub (or ECR if you are using it)
+      - name: Log in to Docker Hub
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
-      # Build the project
-      - name: Build
-        run: npm run build
+      # Step 4: Push Docker image to Docker Hub (or ECR)
+      - name: Push Docker image
+        run: docker push your-image-name
 
-      # Decode the EC2 private key from base64 and set permissions
+      # Step 5: Decode the EC2 private key from base64 and set permissions
       - name: Decode EC2 Key
         run: |
           echo "${{ secrets.EC2_KEY_PATH }}" | base64 -d > social-media-node.pem
           chmod 600 social-media-node.pem
 
-      # Prepare the EC2 instance
+      # Step 6: Prepare the EC2 instance
       - name: Prepare EC2 Instance
         env:
           EC2_INSTANCE_IP: ${{ secrets.EC2_INSTANCE_IP }}
         run: |
           echo "Preparing EC2 instance at $EC2_INSTANCE_IP"
-          ssh -i social-media-node.pem -o StrictHostKeyChecking=no ec2-user@$EC2_INSTANCE_IP 'sudo yum update -y && sudo yum install -y nodejs npm pm2'
+          ssh -i social-media-node.pem -o StrictHostKeyChecking=no ec2-user@$EC2_INSTANCE_IP 'sudo yum update -y && sudo yum install -y docker && sudo service docker start'
 
-      # Deploy the application to the EC2 instance
+      # Step 7: Deploy the Docker containers to the EC2 instance
       - name: Deploy to EC2
         env:
           EC2_INSTANCE_IP: ${{ secrets.EC2_INSTANCE_IP }}  # Ensure this secret is set
         run: |
-          echo "Deploying to EC2 instance at $EC2_INSTANCE_IP"
+          echo "Deploying Docker containers to EC2 instance at $EC2_INSTANCE_IP"
           scp -i social-media-node.pem -o StrictHostKeyChecking=no -r ./* ec2-user@$EC2_INSTANCE_IP:/path/to/deploy
-          
-          echo "Running commands on EC2 instance"
-          ssh -i social-media-node.pem -o StrictHostKeyChecking=no ec2-user@$EC2_INSTANCE_IP 'cd /path/to/deploy && npm install && pm2 start your-app.js'
 
-      # Clean up by removing the private key file
+          # SSH into EC2 instance to run Docker Compose
+          ssh -i social-media-node.pem -o StrictHostKeyChecking=no ec2-user@$EC2_INSTANCE_IP << 'EOF'
+            # Navigate to the deployment directory
+            cd /path/to/deploy
+            # Pull the latest image
+            docker-compose up -d --build
+          EOF
+
+      # Step 8: Clean up by removing the private key file
       - name: Clean up
         run: rm social-media-node.pem
