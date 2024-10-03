@@ -236,3 +236,4 @@ export const createRandomNotifications = async (num: number) => {
         console.error('Lỗi khi tạo thông báo:', error);
     }
 };
+
