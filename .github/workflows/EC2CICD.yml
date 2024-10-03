@@ -30,8 +30,16 @@ jobs:
       # Decode the EC2 private key from base64 and set permissions
       - name: Decode EC2 Key
         run: |
-          echo "${{ secrets.EC2_KEY }}" | base64 --decode > social-media-node.pem
+          echo "${{ secrets.EC2_KEY }}" | base64 -d > social-media-node.pem
           chmod 600 social-media-node.pem
+
+      # Prepare the EC2 instance
+      - name: Prepare EC2 Instance
+        env:
+          EC2_INSTANCE_IP: ${{ secrets.EC2_INSTANCE_IP }}
+        run: |
+          echo "Preparing EC2 instance at $EC2_INSTANCE_IP"
+          ssh -i social-media-node.pem -o StrictHostKeyChecking=no ec2-user@$EC2_INSTANCE_IP 'sudo yum update -y && sudo yum install -y nodejs npm pm2'
 
       # Deploy the application to the EC2 instance
       - name: Deploy to EC2
