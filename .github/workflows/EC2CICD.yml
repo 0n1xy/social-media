@@ -30,8 +30,8 @@ jobs:
       # Decode the EC2 private key from base64 and set permissions
       - name: Decode EC2 Key
         run: |
-          echo "${{ secrets.EC2_KEY }}" | base64 --decode > ec2-key.pem
-          chmod 600 ec2-key.pem
+          echo "${{ secrets.EC2_KEY }}" | base64 --decode > social-media-node.pem
+          chmod 600 social-media-node.pem
 
       # Deploy the application to the EC2 instance
       - name: Deploy to EC2
@@ -39,11 +39,11 @@ jobs:
           EC2_INSTANCE_IP: ${{ secrets.EC2_INSTANCE_IP }}  # Ensure this secret is set
         run: |
           echo "Deploying to EC2 instance at $EC2_INSTANCE_IP"
-          scp -i ec2-key.pem -o StrictHostKeyChecking=no -r ./* ec2-user@$EC2_INSTANCE_IP:/path/to/deploy
+          scp -i social-media-node.pem -o StrictHostKeyChecking=no -r ./* ec2-user@$EC2_INSTANCE_IP:/path/to/deploy
           
           echo "Running commands on EC2 instance"
-          ssh -i ec2-key.pem -o StrictHostKeyChecking=no ec2-user@$EC2_INSTANCE_IP 'cd /path/to/deploy && npm install && pm2 start your-app.js'
+          ssh -i social-media-node.pem -o StrictHostKeyChecking=no ec2-user@$EC2_INSTANCE_IP 'cd /path/to/deploy && npm install && pm2 start your-app.js'
 
       # Clean up by removing the private key file
       - name: Clean up
-        run: rm ec2-key.pem
+        run: rm social-media-node.pem
