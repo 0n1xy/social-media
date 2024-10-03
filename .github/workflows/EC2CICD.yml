@@ -18,6 +18,7 @@ jobs:
           mkdir -p ~/.ssh
           printf "%s" "${{ secrets.EC2_KEY_PATH }}" > ~/.ssh/id_rsa  # Save private key to id_rsa
           chmod 600 ~/.ssh/id_rsa  # Secure permissions for the SSH key
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts  # Add GitHub to known_hosts
           ssh-keyscan -H ${{ secrets.EC2_INSTANCE_IP }} >> ~/.ssh/known_hosts  # Add EC2 instance to known_hosts
 
       - name: Deploy to EC2
