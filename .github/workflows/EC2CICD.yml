@@ -9,33 +9,21 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Checkout the code from the repository
+      # Checkout the code from the repository
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Build the Docker image
+      # Build the Docker image locally
       - name: Build Docker image
         run: |
-          docker build -t your-image-name .
+          docker build -t social-media-app .
 
-      # Step 3: Login to Docker Hub (or ECR if you are using it)
-      - name: Log in to Docker Hub
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-
-      # Step 4: Push Docker image to Docker Hub (or ECR)
-      - name: Push Docker image
-        run: docker push your-image-name
-
-      # Step 5: Decode the EC2 private key from base64 and set permissions
-      - name: Decode EC2 Key
+      # Save the Docker image to a file
+      - name: Save Docker image
         run: |
-          echo "${{ secrets.EC2_KEY_PATH }}" | base64 -d > social-media-node.pem
-          chmod 600 social-media-node.pem
+          docker save social-media-app > social-media-app.tar
 
-      # Step 6: Prepare the EC2 instance
+      # Prepare the EC2 instance
       - name: Prepare EC2 Instance
         env:
           EC2_INSTANCE_IP: ${{ secrets.EC2_INSTANCE_IP }}
@@ -43,22 +31,9 @@ jobs:
           echo "Preparing EC2 instance at $EC2_INSTANCE_IP"
           ssh -i social-media-node.pem -o StrictHostKeyChecking=no ec2-user@$EC2_INSTANCE_IP 'sudo yum update -y && sudo yum install -y docker && sudo service docker start'
 
-      # Step 7: Deploy the Docker containers to the EC2 instance
-      - name: Deploy to EC2
+      # Transfer Docker image file to EC2 instance
+      - name: Transfer Docker Image to EC2
         env:
-          EC2_INSTANCE_IP: ${{ secrets.EC2_INSTANCE_IP }}  # Ensure this secret is set
+          EC2_INSTANCE_IP: ${{ secrets.EC2_INSTANCE_IP }}
         run: |
-          echo "Deploying Docker containers to EC2 instance at $EC2_INSTANCE_IP"
-          scp -i social-media-node.pem -o StrictHostKeyChecking=no -r ./* ec2-user@$EC2_INSTANCE_IP:/path/to/deploy
-
-          # SSH into EC2 instance to run Docker Compose
-          ssh -i social-media-node.pem -o StrictHostKeyChecking=no ec2-user@$EC2_INSTANCE_IP << 'EOF'
-            # Navigate to the deployment directory
-            cd /path/to/deploy
-            # Pull the latest image
-            docker-compose up -d --build
-          EOF
-
-      # Step 8: Clean up by removing the private key file
-      - name: Clean up
-        run: rm social-media-node.pem
+          echo "Transferring Docker image to EC2 instance at $EC2_INSTA
