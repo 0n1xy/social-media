@@ -1,17 +1,19 @@
-import express, { Application } from 'express';
-import { ApolloServer } from 'apollo-server-express';
-// import { typeDefs } from '@/graphql/typeDefs';
-// import { resolvers } from '@/graphql/resolvers';
-import ConnectDB from '@/services/MongoDB_Service';
-import dotenv from 'dotenv';
+import express, { Application } from "express";
+import ConnectDB from "@/services/MongoDB_Service";
+import dotenv from "dotenv";
+import { routers } from "@/routers/index_Router";
+import bodyParser from "body-parser";
 // Load environment variables
 dotenv.config();
 
-import { createRandomUsers } from '@/db/seeds/index_Seed';
+import { createRandomUsers } from "@/db/seeds/index_Seed";
 const app = express();
 const port = process.env.PORT || 3000;
 // Middleware to parse JSON
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+//Router
+routers(app);
 
 const startServer = async () => {
   try {
@@ -19,28 +21,14 @@ const startServer = async () => {
     const db = new ConnectDB();
     await db.connect();
 
-    // Create an instance of ApolloServer
-    // const apolloServer = new ApolloServer({
-    //   typeDefs,
-    //   resolvers,
-    //   context: ({ req }) => {
-    //     return { req }; // You can add more context if needed
-    //   },
-    // });
-
-    // Start the Apollo Server
-    // await apolloServer.start();
-    // apolloServer.applyMiddleware({ app, path: '/graphql' });
-
     // Start the Express server
     app.listen(port, () => {
       console.log(`🚀 Server is running on port ${port}`);
-      console.log(`GraphQL endpoint available at http://localhost:${port}/graphql`);
     });
-
   } catch (error) {
-    console.error('Error starting the server:', error); // Log any startup errors
+    console.error("Error starting the server:", error); // Log any startup errors
   }
-}
+};
 
 startServer();
+// createRandomUsers(20);
