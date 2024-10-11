@@ -2,6 +2,10 @@ import User from "@/models/UserModel";
 import { Request, Response } from "express";
 import UserService from "@/services/User_Service";
 import PaginationService from "@/services/Pagination_Service";
+import {
+  USER_LIMIT_PAGINATION,
+  USER_PAGE_PAGINATION,
+} from "@/constant/User_Constant";
 
 const userService = new UserService();
 const paginationService = new PaginationService();
@@ -28,8 +32,8 @@ export const createUser = async (req: Request, res: Response) => {
 
 export const getallUserData = async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1; // Default to page 1
-    const limit = parseInt(req.query.limit as string) || 10; // Default to limit 10
+    const page = parseInt(req.query.page as string) || USER_PAGE_PAGINATION;
+    const limit = parseInt(req.query.limit as string) || USER_LIMIT_PAGINATION;
     const user = await User.find();
     // Call the pagination service with User model
     const paginationResult = await paginationService.paginateArray(
