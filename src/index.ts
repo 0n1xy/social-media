@@ -1,4 +1,4 @@
-import express, { Application } from "express";
+import express from "express";
 import ConnectDB from "@/services/MongoDB_Service";
 import dotenv from "dotenv";
 import { routers } from "@/routers/index_Router";
@@ -6,7 +6,7 @@ import bodyParser from "body-parser";
 // Load environment variables
 dotenv.config();
 
-import { createRandomUsers } from "@/db/seeds/index_Seed";
+import { createRandomPosts, createRandomUsers } from "@/db/seeds/index_Seed";
 const app = express();
 const port = process.env.PORT || 3000;
 // Middleware to parse JSON
@@ -31,4 +31,5 @@ const startServer = async () => {
 };
 
 startServer();
-// createRandomUsers(20);
+createRandomUsers(20);
+createRandomPosts(20);
