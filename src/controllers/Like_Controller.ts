@@ -1,83 +1,62 @@
 import Like from "@/models/LikeModel";
-import { Request, Response, NextFunction } from 'express';
-import { handleError } from "@/utils/errorHandler";
+import Post from "@/models/PostModel";
+import PaginationService from "@/services/Pagination_Service";
+import { Request, Response } from "express";
 import { ObjectId } from "mongodb";
 
-//GET Post
-export const getAllLike = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const likes = await Like.find({});
-        res.status(200).json(likes);
-    } catch (error) {
-        handleError(res, error, "Error fetching likes");
-    }
-}
+const paginationService = new PaginationService();
 
-export const getLike = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const like = await Like.findById(req.params.id);
-        if(!like) {
-            return res.status(404).json({message: "Like not existing!"})
-        }
-        res.status(200).json(like);
-    } catch (error) {
-        handleError(res, error, "Error fetching Like");
-    }
-}
-
-export const getLikeFromUser = async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.user_id;
-
-    if (!userId) {
-        return res.status(400).json({ message: "User ID is required." });
-    }
-
-    try {
-        const likes = await Like.find({user_id : userId});
-        if(!likes.length) {
-            return res.status(404).json({message: "User hasn't like any post yet!"})
-        }
-        res.status(200).json(likes);
-    } catch (error) {
-        handleError(res, error, "Error fetching likes");
-    }
-}
-
-//CREATE Post
-export const createLike = async (req: Request, res: Response, next: NextFunction) => {
+export const likePost = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.user_id;
-    const postId = req.params.post_id;
+    const data = req.body;
 
-    if (!userId) {
-        return res.status(400).json({ message: "User ID is required." });
-    }
-    if (!postId) {
-        return res.status(400).json({ message: "Post ID is required." });
-    }
-
-    const like = new Like({
-        _id: new ObjectId(),
-        user_id: userId,
-        post_id: postId,
+    const saveData = new Like({
+      _id: new ObjectId(),
+      postId: data.postId,
+      userId: data.userId,
     });
+    await saveData.save();
 
-    await like.save();
-    res.status(201).json({ message: "Post liked!", like });
+    res.status(201).json({ message: "Success", saveData });
   } catch (error) {
-    handleError(res, error, "Error when like a post!");
+    res.status(500).json({ message: "Internal Server Error", error });
   }
-}
+};
 
-//DELETE Post
-export const deleteLike = async (req: Request, res: Response, next: NextFunction) => {
-    try{
-        const like = await Like.findByIdAndDelete(req.params.id);
-        if (!like)
-            return res.status(404).json({ message: "Like not found"})
+export const getLikebyUserId = async (req: Request, res: Response) => {
+  try {
+    const p = parseInt(req.query.page as string);
+    const limit = parseInt(req.query.limit as string);
 
-        res.status(200).json({ message: "Like removed!"});
-    } catch(error) {
-        handleError(res, error, "Error occur when unlike a post!");
+    const data = await Like.find();
+
+    const paginationResult = await paginationService.paginateArray(
+      data,
+      p,
+      limit
+    );
+
+    return res.status(200).json({
+      data: paginationResult.data,
+      totalDocuments: paginationResult.totalDocuments,
+      totalPages: paginationResult.totalPages,
+      currentPage: paginationResult.currentPage,
+      limit: paginationResult.limit,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error", error });
+  }
+};
+
+export const unLike = async (req: Request, res: Response) => {
+  try {
+    const updateData = await Post.findByIdAndUpdate(req.params.id, req.body);
+    if (updateData) {
+      res.status(200).json({ message: "Post updated successfully" });
+    } else {
+      res.status(500).json({ message: "Post not found" });
     }
-}
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};

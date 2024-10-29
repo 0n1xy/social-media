@@ -1,123 +1,102 @@
-import Like from "@/models/LikeModel";
+import {
+  POST_LIMIT_PAGINATION,
+  POST_PAGE_PAGINATION,
+} from "@/constant/Post_Constant";
 import Post from "@/models/PostModel";
-import Comment from "@/models/CommentModel";
-import { Request, Response, NextFunction } from 'express';
+import PaginationService from "@/services/Pagination_Service";
+import UploadFileService from "@/services/UploadFile_Service";
+import { Request, Response } from "express";
 import { ObjectId } from "mongodb";
-import { handleError } from "@/utils/errorHandler";
 
-//GET Post
-export const getAllPost = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const posts = await Post.find({});
-        res.status(200).json(posts);
-    } catch (error) {
-        handleError(res, error, "Error fetching posts");
-    }
-}
+const paginationService = new PaginationService();
+const uploadFileService = new UploadFileService();
 
-export const getPost = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const post = await Post.findById(req.params.id);
-        if(!post) {
-            return res.status(404).json({message: "Post not existing!"})
-        }
-        
-        const likes = await Like.countDocuments({ post_id: post?._id })
-
-        res.status(200).json({ post, likes });
-    } catch (error) {
-        handleError(res, error, "Error fetching post");
-    }
-}
-
-export const getPostFromUser = async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.user_id;
-
-    if (!userId) {
-        return res.status(400).json({ message: "User ID is required." });
-    }
-
-    try {
-        const posts = await Post.find({user_id : userId});
-        if(!posts.length) {
-            return res.status(404).json({message: "User has no post yet!"})
-        }
-        res.status(200).json(posts);
-    } catch (error) {
-        handleError(res, error, "Error fetching post");
-    }
-}
-
-//CREATE Post
-export const createPost = async (req: Request, res: Response, next: NextFunction) => {
+export const createPost = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.user_id;
+    const data = req.body;
+    const { media } = req.body;
 
-    if (!userId) {
-        return res.status(400).json({ message: "User ID is required." });
+    let mediaUrls: string[] = [];
+
+    // Check if media is provided
+    if (media) {
+      // Handle both single and multiple files
+      if (typeof media === "string" || Array.isArray(media)) {
+        mediaUrls = await uploadFileService.uploadFiles(media);
+      } else {
+        return res.status(400).json({ message: "Invalid media format" });
+      }
     }
 
-    const { post_title, content } = req.body;
-    if (!post_title || !content) {
-        return res.status(400).json({ message: "Post title and content are required." });
-    }
-
-    const post = new Post({
-        _id: new ObjectId(),
-        user_id: userId,
-        post_title: post_title,
-        content: content,
+    // Create a new post object with or without media
+    const saveData = new Post({
+      _id: new ObjectId(),
+      user_id: data.user_id,
+      post_title: data.post_title,
+      media: mediaUrls, // This will be an empty array if no media
+      content: data.content,
     });
 
-    await post.save();
-    res.status(201).json({ message: "Post created!", post });
+    await saveData.save();
+
+    res.status(201).json({ message: "Success", saveData });
   } catch (error) {
-    handleError(res, error, "Error when creating post!");
+    res.status(500).json({ message: "Internal Server Error", error });
   }
-}
+};
 
-//UPDATE Post
-export const updatePost = async (req: Request, res: Response, next: NextFunction) => {
-    try{
-        const existingPost = await Post.findById(req.params.id);
-        if (!existingPost) {
-        return res.status(404).json({ message: "Post not found" });
-        }
+export const getAllPost = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || POST_PAGE_PAGINATION;
+    const limit = parseInt(req.query.limit as string) || POST_LIMIT_PAGINATION;
+    const data = await Post.find();
 
-        // if (existingPost.user_id?.toString() != req.user.id) {
-        //     return res.status(403).json({ message: "Access denied. You do not own this post." });
-        // }
+    const paginationResult = await paginationService.paginateArray(
+      data,
+      page,
+      limit
+    );
+    return res.status(200).json({
+      data: paginationResult.data,
+      totalDocuments: paginationResult.totalDocuments,
+      totalPages: paginationResult.totalPages,
+      currentPage: paginationResult.currentPage,
+      limit: paginationResult.limit,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error", error });
+  }
+};
 
-        const { post_title, content } = req.body;
+export const getPostByUserId = async (req: Request, res: Response) => {
+  try {
+    const data = await Post.find({ user_id: req.params.id });
+    res.status(200).json({ message: " Success", data });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
-        const updatedPost = await Post.findByIdAndUpdate(
-            req.params.id,
-            {
-                post_title: post_title,
-                content: content,
-            },
-            { new: true }
-        );
-
-        if (!updatedPost) {
-        return res.status(404).json({ message: "Post not found" });
+export const updatePost = async (req: Request, res: Response) => {
+  try {
+    const updateData = await Post.findByIdAndUpdate(req.params.id, req.body);
+    if (updateData) {
+      res.status(200).json({ message: "Post updated successfully" });
+    } else {
+      res.status(500).json({ message: "Post not found" });
     }
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
-    res.status(200).json({ message: "Post updated!", updatedPost });
-    } catch (error) {
-        handleError(res, error, "Error updating post!");
-    };
-}
-
-//DELETE Post
-export const deletePost = async (req: Request, res: Response, next: NextFunction) => {
-    try{
-        const post = await Post.findByIdAndDelete(req.params.id);
-        if (!post)
-            return res.status(404).json({ message: "Post not found"})
-
-        res.status(200).json({ message: "Post deleted!"});
-    } catch(error) {
-        handleError(res, error, "Error occur when deleting post!");
+export const deletePost = async (req: Request, res: Response) => {
+  try {
+    const deleteData = await Post.findByIdAndDelete(req.params.id);
+    if (deleteData) {
+      res.status(200).json({ message: "Post deleted successfully" });
+    } else {
+      res.status(500).json({ message: "Post not found" });
     }
-}
+  } catch (error) {}
+};

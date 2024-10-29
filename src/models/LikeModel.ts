@@ -6,12 +6,12 @@ export const likeSchemaFields = {
     type: Schema.Types.ObjectId,
     required: true,
   },
-  post_id: {
+  postId: {
     type: Schema.Types.ObjectId,
     ref: "Post",
     required: true,
   },
-  user_id: {
+  userId: {
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,

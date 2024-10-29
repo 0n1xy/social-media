@@ -1,20 +1,18 @@
 import express from "express";
 import ConnectDB from "@/services/MongoDB_Service";
-import dotenv from "dotenv";
+require("dotenv").config();
 import { routers } from "@/routers/index_Router";
 import bodyParser from "body-parser";
-// Load environment variables
-dotenv.config();
-
 import { createRandomPosts, createRandomUsers } from "@/db/seeds/index_Seed";
+
 const app = express();
-const port = process.env.PORT || 3000;;
+const port = process.env.PORT || 3000;
 const cors = require("cors");
-const cookieParser = require('cookie-parser'); 
+const cookieParser = require("cookie-parser");
 
 var corsOptions = {
   origin: "https://localhost:8081",
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
 
 // Middleware to parse JSON
@@ -22,6 +20,9 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(express.json()); // JSON parsing
+app.use(express.urlencoded({ limit: "500mb", extended: true })); // Handle URL-encoded data with large limit
+
 //Router
 routers(app);
 
@@ -41,5 +42,6 @@ const startServer = async () => {
 };
 
 startServer();
-createRandomUsers(20);
-createRandomPosts(20);
+
+// createRandomUsers(20);
+// createRandomPosts(20);
