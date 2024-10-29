@@ -43,7 +43,6 @@ export const getallUserData = async (req: Request, res: Response) => {
     );
 
     return res.status(200).json({
-      status: 200,
       data: paginationResult.data,
       totalDocuments: paginationResult.totalDocuments,
       totalPages: paginationResult.totalPages,
@@ -88,7 +87,6 @@ export const updateUser = async (req: Request, res: Response) => {
 
 export const deleteUserById = async (req: Request, res: Response) => {
   try {
-    console.log("Deleting User with ID:", req.params.id);
     const deletedUser = await User.findByIdAndDelete(req.params.id);
     if (deletedUser) {
       res.status(200).json({ message: "User deleted successfully" });

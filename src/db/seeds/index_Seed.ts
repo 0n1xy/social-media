@@ -33,6 +33,7 @@ export const createRandomUsers = async (num: number) => {
   try {
     for (let i = 0; i <= num; i++) {
       await createUser();
+      await createPost();
     }
     console.log(num + " người dùng đã được tạo thành công!");
   } catch (error) {
