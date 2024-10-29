@@ -1,9 +1,11 @@
+// server.ts
 import express from "express";
+import { createServer } from "http";
 import ConnectDB from "@/services/MongoDB_Service";
-require("dotenv").config();
-import { routers } from "@/routers/index_Router";
+import dotenv from "dotenv";
 import bodyParser from "body-parser";
-import { createRandomPosts, createRandomUsers } from "@/db/seeds/index_Seed";
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -22,23 +24,17 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.json()); // JSON parsing
 app.use(express.urlencoded({ limit: "500mb", extended: true })); // Handle URL-encoded data with large limit
+const httpServer = createServer(app);
 
-//Router
-routers(app);
+// Connect to MongoDB
+const db = new ConnectDB();
+db.connect();
 
+// Start Apollo Server and the HTTP server
 const startServer = async () => {
-  try {
-    // Initialize MongoDB connection
-    const db = new ConnectDB();
-    await db.connect();
-
-    // Start the Express server
-    app.listen(port, () => {
-      console.log(`🚀 Server is running on port ${port}`);
-    });
-  } catch (error) {
-    console.error("Error starting the server:", error); // Log any startup errors
-  }
+  httpServer.listen(port, () => {
+    console.log(`🚀 Server ready at http://localhost:${port}/graphql`);
+  });
 };
 
 startServer();
