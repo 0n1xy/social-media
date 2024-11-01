@@ -1,46 +1,52 @@
-import express, { Application } from 'express';
-import { ApolloServer } from 'apollo-server-express';
-// import { typeDefs } from '@/graphql/typeDefs';
-// import { resolvers } from '@/graphql/resolvers';
-import ConnectDB from '@/services/MongoDB_Service';
-import dotenv from 'dotenv';
-// Load environment variables
+import express from "express";
+import ConnectDB from "@/services/MongoDB_Service";
+import dotenv from "dotenv";
+import bodyParser from "body-parser";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import { routers } from "@/routers/index_Router";
+import { createRandomPosts, createRandomUsers } from "@/db/seeds/index_Seed";
+import { createServer } from "http";
+
 dotenv.config();
 
-import { createRandomUsers } from '@/db/seeds/index_Seed';
 const app = express();
 const port = process.env.PORT || 3000;
-// Middleware to parse JSON
-app.use(express.json());
 
+// CORS configuration
+const corsOptions = {
+  origin: "https://localhost:8081",
+  optionsSuccessStatus: 200,
+};
+
+// Middleware
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
+app.use(cookieParser());
+
+// View engine
+app.set("view engine", "ejs");
+app.set("views", "src/views");
+
+// Routes
+routers(app);
+
+// Start server
 const startServer = async () => {
   try {
-    // Initialize MongoDB connection
     const db = new ConnectDB();
     await db.connect();
 
-    // Create an instance of ApolloServer
-    // const apolloServer = new ApolloServer({
-    //   typeDefs,
-    //   resolvers,
-    //   context: ({ req }) => {
-    //     return { req }; // You can add more context if needed
-    //   },
-    // });
-
-    // Start the Apollo Server
-    // await apolloServer.start();
-    // apolloServer.applyMiddleware({ app, path: '/graphql' });
-
-    // Start the Express server
     app.listen(port, () => {
       console.log(`🚀 Server is running on port ${port}`);
-      console.log(`GraphQL endpoint available at http://localhost:${port}/graphql`);
     });
-
   } catch (error) {
-    console.error('Error starting the server:', error); // Log any startup errors
+    console.error("Error starting the server:", error);
   }
-}
+};
 
 startServer();
+
+// createRandomUsers(2);
+// createRandomPosts(20);
