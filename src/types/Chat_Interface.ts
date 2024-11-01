@@ -1,6 +1,7 @@
 interface IChatMessage extends Document {
-    roomId: string;
-    senderId: string;
-    message: string;
-    timestamp: Date;
-  }
+  senderUserId: string;
+  receiveUserId: string;
+  message?: string;
+  media?: string[];
+  timestamp: Date;
+}

@@ -1,28 +1,60 @@
-import { PubSub } from 'graphql-subscriptions';
-import { ChatMessage } from '@/models/Chat_Schema'; // Assuming ChatMessage is a Mongoose model
-
-const pubsub = new PubSub();
-const MESSAGE_SENT = 'MESSAGE_SENT';
+// src/services/ChatService.ts
+import { ChatMessage } from "@/models/Chat_Schema";
 
 class ChatService {
-  async sendMessage(roomId: string, senderId: string, message: string) {
-    // Save the message to the database
-    const chatMessage = new ChatMessage({ roomId, senderId, message, timestamp: new Date() });
-    await chatMessage.save();
+  async createMessage(
+    senderUserId: string,
+    receiveUserId: string,
+    message: string,
+    media: string[] = []
+  ) {
+    const newMessage = new ChatMessage({
+      senderUserId,
+      receiveUserId,
+      message,
+      media,
+      timestamp: new Date(),
+    });
 
-    // Publish the message to subscribers
-    pubsub.publish(MESSAGE_SENT, { messageSent: chatMessage });
-
-    return chatMessage;
+    // Save message to database
+    await newMessage.save();
+    return newMessage;
   }
 
-  async getChatHistory(roomId: string) {
-    // Retrieve chat history from the database
-    return await ChatMessage.find({ roomId }).sort({ timestamp: 1 });
+  async getRecentMessages(
+    userId1: string,
+    userId2: string,
+    limit: number,
+    lastTimestamp?: Date
+  ) {
+    const query = {
+      $or: [
+        { senderUserId: userId1, receiveUserId: userId2 },
+        { senderUserId: userId2, receiveUserId: userId1 },
+      ],
+      ...(lastTimestamp && { timestamp: { $lt: lastTimestamp } }), // Fetch only older messages
+    };
+
+    return await ChatMessage.find(query)
+      .sort({ timestamp: -1 }) // Sort from newest to oldest
+      .limit(limit)
+      .exec();
   }
 
-  subscribeToMessages(roomId: string) {
-    return pubsub.asyncIterator([MESSAGE_SENT]); // Subscribes to the MESSAGE_SENT event
+  async getMessageById(messageId: string) {
+    return await ChatMessage.findById(messageId);
+  }
+
+  async updateMessage(messageId: string, newContent: string) {
+    return await ChatMessage.findByIdAndUpdate(
+      messageId,
+      { message: newContent },
+      { new: true }
+    );
+  }
+
+  async deleteMessageById(messageId: string) {
+    return await ChatMessage.findByIdAndDelete(messageId);
   }
 }
 
