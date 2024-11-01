@@ -8,10 +8,20 @@ dotenv.config();
 
 import { createRandomUsers } from "@/db/seeds/index_Seed";
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;;
+const cors = require("cors");
+const cookieParser = require('cookie-parser'); 
+
+var corsOptions = {
+  origin: "https://localhost:8081",
+  optionsSuccessStatus: 200
+};
+
 // Middleware to parse JSON
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 //Router
 routers(app);
 

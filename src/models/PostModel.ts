@@ -2,7 +2,6 @@ import { IPost } from "@/types/Post_Interface";
 import User from '@/models/UserModel';
 import { Schema, model } from "mongoose";
 
-
 export const postSchemaFields = {
     _id: {
         type: Schema.Types.ObjectId,
@@ -20,7 +19,7 @@ export const postSchemaFields = {
 };
 
 const postSchema = new Schema<IPost>(postSchemaFields);
-postSchema.pre('save', function(next) {
+postSchema.pre('save', async function(next) {
     this.updated_date = new Date();
     next();
 });

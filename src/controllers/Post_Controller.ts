@@ -21,7 +21,10 @@ export const getPost = async (req: Request, res: Response, next: NextFunction) =
         if(!post) {
             return res.status(404).json({message: "Post not existing!"})
         }
-        res.status(200).json(post);
+        
+        const likes = await Like.countDocuments({ post_id: post?._id })
+
+        res.status(200).json({ post, likes });
     } catch (error) {
         handleError(res, error, "Error fetching post");
     }
@@ -42,38 +45,6 @@ export const getPostFromUser = async (req: Request, res: Response, next: NextFun
         res.status(200).json(posts);
     } catch (error) {
         handleError(res, error, "Error fetching post");
-    }
-}
-
-//COUNT Post's likes
-export const countPostsLikes = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const post = await Post.findById(req.params.id);
-        if(!post)
-            return res.status(404).json({ message: "Post not found!"});
-        
-        const likeCount = Like.countDocuments({ post_id: req.params.id })
-
-        return res.status(200).json({ post, likeCount })
-
-    } catch ( error ) {
-        handleError(res, error, "Error counting likes");
-    }
-}
-
-//COUNT Post's Comments
-export const countPostsComments = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const post = await Post.findById(req.params.id);
-        if(!post)
-            return res.status(404).json({ message: "Post not found!"});
-        
-        const commentCount = Comment.countDocuments({ post_id: req.params.id })
-
-        return res.status(200).json({ post, commentCount })
-
-    } catch ( error ) {
-        handleError(res, error, "Error counting comments");
     }
 }
 
@@ -150,4 +121,3 @@ export const deletePost = async (req: Request, res: Response, next: NextFunction
         handleError(res, error, "Error occur when deleting post!");
     }
 }
-
