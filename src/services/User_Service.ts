@@ -56,7 +56,24 @@ class UserService {
 
   public async loginMethod(user: IUser) {
     try {
-    } catch (error: any) {}
+      // Check if user exists by email
+      const existingUser = await User.findOne({ email: user.email });
+      if (!existingUser) {
+        throw new Error("Invalid email or password.");
+      }
+
+      // Verify the password
+      const isPasswordValid = await bcrypt.compare(user.password, existingUser.password);
+      if (!isPasswordValid) {
+        throw new Error("Invalid email or password.");
+      }
+
+      // If verification is successful, return the user data
+      return existingUser;
+    } catch (error: any) {
+      console.error("Error in loginMethod:", error.message);
+      throw new Error("Login failed. Please check your credentials and try again.");
+    }
   }
 }
 

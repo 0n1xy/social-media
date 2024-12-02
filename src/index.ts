@@ -5,7 +5,8 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { routers } from "@/routers/index_Router";
-import { createRandomPosts, createRandomUsers } from "@/db/seeds/index_Seed";
+// import { createRandomPosts, createRandomUsers } from "@/db/seeds/index_Seed";
+import { createRandomData } from "@/db/seeds/index_Seed";
 import { createServer } from "http";
 
 dotenv.config();
@@ -50,3 +51,5 @@ startServer();
 
 // createRandomUsers(2);
 // createRandomPosts(20);
+createRandomData(10);
+

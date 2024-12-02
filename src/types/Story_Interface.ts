@@ -1,8 +1,9 @@
 import { ObjectId } from "mongodb";
 
-export interface ILike {
+export interface IStory {
   _id: ObjectId;
-  post_id?: ObjectId;
   user_id?: ObjectId;
+  text: string;
+  media?: string[];
   created_date: Date;
 }
