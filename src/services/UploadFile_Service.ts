@@ -24,7 +24,6 @@ class UploadFileService {
     });
   }
 
-  // Extend file type validation to include videos
   private getFileExtension(mimeType: string): string {
     switch (mimeType) {
       case "image/jpeg":
@@ -40,12 +39,11 @@ class UploadFileService {
       case "video/mkv":
         return "mkv";
       default:
-        return "bin"; // default case for unknown types
+        return "bin"; // Fallback for unknown types
     }
   }
 
   private async uploadSingleFile(file: string): Promise<string> {
-    // Validate base64 format and MIME type for both image and video
     if (
       typeof file !== "string" ||
       !(file.startsWith("data:image/") || file.startsWith("data:video/"))
@@ -62,7 +60,7 @@ class UploadFileService {
 
     const fileExtension = this.getFileExtension(mimeType);
     const buffer = Buffer.from(file.split(",")[1], "base64");
-    const fileName = `${uuidv4()}.${fileExtension}`; // Unique file name using UUID and extracted file extension
+    const fileName = `${uuidv4()}.${fileExtension}`;
 
     const uploadParams = {
       Bucket: String(process.env.AWS_BUCKET_NAME),
@@ -100,7 +98,7 @@ class UploadFileService {
       const deleteResult = await this.s3.send(
         new DeleteObjectCommand(deleteParams)
       );
-      console.log("Delete result:", deleteResult);
+      console.log("Media deleted:", deleteResult);
     } catch (error) {
       console.error("Error deleting media:", error);
       throw new Error(

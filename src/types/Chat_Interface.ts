@@ -1,4 +1,4 @@
-interface IChatMessage extends Document {
+export interface IChatMessage extends Document {
   senderUserId: string;
   receiveUserId: string;
   message?: string;

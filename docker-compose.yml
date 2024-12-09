@@ -1,3 +1,25 @@
+# services:
+#   app:
+#     build: .
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       MONGO_URL: "mongodb://mongo:27017/social-media"
+#     depends_on:
+#       - mongo
+
+#   mongo:
+#     image: mongo:latest
+#     ports:
+#       - "27017:27017"
+#   rabbitmq:
+#     image: rabbitmq:4.0-management
+#     ports:
+#       - "5672:5672"
+#       - "15672:15672"
+
+version: "3.9"
+
 services:
   app:
     build: .
@@ -5,10 +27,33 @@ services:
       - "3000:3000"
     environment:
       MONGO_URL: "mongodb://mongo:27017/social-media"
+      RABBITMQ_URL: "amqp://rabbitmq:5672"
     depends_on:
       - mongo
+      - rabbitmq
+    networks:
+      - app_network
 
   mongo:
     image: mongo:latest
+    container_name: mongo
     ports:
       - "27017:27017"
+    networks:
+      - app_network
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge

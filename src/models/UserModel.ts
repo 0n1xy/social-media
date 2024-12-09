@@ -22,6 +22,8 @@ export const userSchemaFields = {
   birthday: { type: Date, required: false },
   profile_picture: { type: String },
   biography: { type: String },
+  follows: { type: Schema.Types.ObjectId, require: true, ref: "Follow" },
+  account_status: { type: String, require: true, default: true },
   created_date: { type: Date, default: Date.now(), required: false },
   updated_date: { type: Date, default: Date.now(), required: false },
 };

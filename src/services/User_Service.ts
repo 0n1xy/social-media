@@ -1,9 +1,8 @@
 import User from "@/models/UserModel";
 import { IUser } from "@/types/User_Interface";
 import bcrypt from "bcrypt";
-import { ObjectId } from "mongodb";
 import mongoose from "mongoose";
-
+import { getChannel } from "./RabbitMQ_Service";
 class UserService {
   public async encryptPasswords(password: string) {
     const hash = await bcrypt.hash(password, 10);
@@ -56,7 +55,54 @@ class UserService {
 
   public async loginMethod(user: IUser) {
     try {
+      
     } catch (error: any) {}
+  }
+
+  public async followMethod(
+    service: string,
+    receiveUserId: mongoose.Schema.Types.ObjectId,
+    senderUserId: mongoose.Schema.Types.ObjectId
+  ) {
+    try {
+      await this.sendFollowRequest(service, receiveUserId, senderUserId);
+      console.log("Follow request processed");
+      return true; // Indicate success
+    } catch (error) {
+      console.error("Error in followMethod:", error);
+      return false; // Indicate failure
+    }
+  }
+
+  private async sendFollowRequest(
+    service: string,
+    senderUser: mongoose.Schema.Types.ObjectId,
+    receiveUser: mongoose.Schema.Types.ObjectId
+  ): Promise<void> {
+    const queueFollowNotification = "FollowNotification";
+    try {
+      const channel = await getChannel(queueFollowNotification);
+      const message = JSON.stringify({
+        service,
+        senderUser,
+        receiveUser,
+      });
+
+      channel.sendToQueue(queueFollowNotification, Buffer.from(message), {
+        persistent: true,
+      });
+
+      console.log(
+        `Message sent to queue "${queueFollowNotification}":`,
+        message
+      );
+    } catch (error) {
+      console.error(
+        `Failed to send message to queue "${queueFollowNotification}":`,
+        (error as Error).message
+      );
+      throw error;
+    }
   }
 }
 

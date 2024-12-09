@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Notification</title>
+    <script>
+      // WebSocket logic
+      document.addEventListener("DOMContentLoaded", () => {
+        // Prompt the user to enter their ID
+        const userId = prompt("Please enter your User ID:");
+
+        if (!userId) {
+          alert("User ID is required to connect to WebSocket!");
+          return;
+        }
+
+        const socket = new WebSocket(`ws://localhost:8080?userId=${userId}`);
+        const notificationContainer = document.getElementById("notifications");
+        const userIdDisplay = document.getElementById("userId");
+
+        // Display the entered User ID
+        userIdDisplay.textContent = userId;
+
+        socket.onopen = () => {
+          console.log("Connected to WebSocket server as user:", userId);
+        };
+
+        socket.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          console.log("Received notification:", data);
+
+          // Display the notification
+          const notification = document.createElement("div");
+          notification.className = "notification";
+          notification.textContent = `🔔 ${data.message}`;
+          notificationContainer.appendChild(notification);
+        };
+
+        socket.onclose = () => {
+          console.log("Disconnected from WebSocket server.");
+        };
+
+        socket.onerror = (error) => {
+          console.error("WebSocket error:", error);
+        };
+      });
+    </script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f9f9f9;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .notification {
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #e0f7fa;
+        color: #00796b;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome!</h1>
+      <h3>Your User ID: <span id="userId">[Not Set]</span></h3>
+      <h3>Your Notifications:</h3>
+      <div id="notifications">
+        <!-- Notifications will appear here -->
+      </div>
+    </div>
+  </body>
+</html>

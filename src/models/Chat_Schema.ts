@@ -1,3 +1,4 @@
+import { IChatMessage } from "@/types/Chat_Interface";
 import mongoose, { Schema, Document } from "mongoose";
 
 const ChatMessageSchema: Schema = new Schema({
